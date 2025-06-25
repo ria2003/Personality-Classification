@@ -30,15 +30,18 @@ selection = st.sidebar.radio("Go to", ["🧠 Personality Predictor", "📊 Dashb
 # -------- TAB 1: Personality Predictor --------
 if selection == "🧠 Personality Predictor":
     st.title("🧠 Live Personality Type Predictor")
-    st.markdown("Fill in your behavioral traits below:")
+    st.markdown("Select your behavioral traits below:")
 
     feature_labels = [
         "social_energy", "alone_time_preference", "talkativeness", "deep_reflection",
         "group_comfort", "party_liking", "listening_skill", "empathy", "creativity",
-        "spontaneity", "adventurousness", "reading_habit", "sports_interest",
-        "online_social_usage", "travel_desire", "gadget_usage",
-        "work_style_collaborative", "decision_speed", "stress_handling"
+        "organization", "leadership", "risk_taking", "public_speaking_comfort",
+        "curiosity", "routine_preference", "excitement_seeking", "friendliness",
+        "emotional_stability", "planning", "spontaneity", "adventurousness",
+        "reading_habit", "sports_interest", "online_social_usage", "travel_desire",
+        "gadget_usage", "work_style_collaborative", "decision_speed", "stress_handling"
     ]
+
 
     user_input = []
     cols = st.columns(3)
