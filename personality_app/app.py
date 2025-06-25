@@ -17,8 +17,8 @@ sns.set(style="whitegrid")
 st.set_page_config(page_title="Personality Predictor", layout="wide")
 
 # Load model and scaler
-model = pickle.load(open("ensemble_model.pkl", "rb"))
-scaler = pickle.load(open("scaler.pkl", "rb"))
+model = pickle.load(open("personality_app/ensemble_model.pkl", "rb"))
+scaler = pickle.load(open("personality_app/ensemble_scaler.pkl", "rb"))
 
 # Define personality map
 personality_map = {0: "Ambivert", 1: "Extrovert", 2: "Introvert"}
