@@ -6,7 +6,6 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from sklearn.preprocessing import StandardScaler
 from sklearn.decomposition import PCA
-from sklearn.metrics import silhouette_score
 import os
 
 # Set style for seaborn
@@ -19,8 +18,12 @@ st.set_page_config(page_title="Personality Predictor", layout="wide")
 model = pickle.load(open("personality_app/kmeans_model.pkl", "rb"))
 scaler = pickle.load(open("personality_app/ensemble_scaler.pkl", "rb"))
 
-# Define personality map
-personality_map = {0: "Introvert", 1: "Extrovert", 2: "Ambivert"}
+# Define personality map and descriptions
+personality_map = {
+    0: ("Introvert", "You tend to enjoy solitude, deep thinking, and quiet environments. You're thoughtful and often recharge by spending time alone."),
+    1: ("Ambivert", "You display a balance of introverted and extroverted tendencies. You enjoy both social interactions and time alone."),
+    2: ("Extrovert", "You thrive in social environments, love engaging with people, and gain energy from being around others.")
+}
 
 # Sidebar for navigation
 st.sidebar.title("Navigation")
@@ -54,14 +57,32 @@ if selection == "🧠 Personality Predictor":
 
     if st.button("Predict Personality Cluster"):
         input_scaled = scaler.transform([user_input])
-        cluster = model[input_scaled][0] if isinstance(model, np.ndarray) else model.predict(input_scaled)[0]
+        cluster = model.predict(input_scaled)[0]
+        label, insight = personality_map.get(cluster, (f"Cluster {cluster}", "No description available."))
         st.subheader("Predicted Personality Cluster:")
-        st.success(f"You belong to {personality_map.get(cluster, f'Cluster {cluster}')}.")
+        st.success(f"{label}")
+        st.info(insight)
 
-        # Save the input for retraining
+        # Radar chart for visual profile
+        st.subheader("Your Personality Radar Chart")
+        categories = [f.replace('_', ' ').title() for f in feature_labels[:8]]
+        values = user_input[:8]
+        values += values[:1]
+        angles = np.linspace(0, 2 * np.pi, len(categories), endpoint=False).tolist()
+        angles += angles[:1]
+
+        fig, ax = plt.subplots(figsize=(5, 5), subplot_kw=dict(polar=True))
+        ax.plot(angles, values, color='purple', linewidth=2)
+        ax.fill(angles, values, color='purple', alpha=0.25)
+        ax.set_xticks(angles[:-1])
+        ax.set_xticklabels(categories, fontsize=10)
+        ax.set_yticklabels([])
+        st.pyplot(fig)
+
+        # Save input
         input_data = pd.DataFrame([user_input], columns=feature_labels)
         input_data['cluster'] = cluster
-        input_data.to_csv("user_inputs/new_input.csv", mode='a', header=not os.path.exists("user_inputs/new_input.csv"), index=False)
+        input_data.to_csv("personality_app/personality.csv", mode='a', header=not os.path.exists("personality_app/personality.csv"), index=False)
         st.info("Your input has been saved for future model improvement.")
 
 # -------- TAB 2: Dashboard --------
@@ -70,10 +91,9 @@ elif selection == "📊 Dashboard":
 
     try:
         df = pd.read_csv("personality_app/personality.csv")
-        st.subheader("📁 Data Preview")
+        st.subheader("Data Preview")
         st.dataframe(df.head())
 
-        # Drop target if exists
         if 'personality_type' in df.columns:
             df = df.drop('personality_type', axis=1)
 
@@ -81,43 +101,37 @@ elif selection == "📊 Dashboard":
         labels = model.predict(X_scaled)
         df['cluster'] = labels
 
-        # Cluster distribution
-        st.subheader("📊 Cluster Distribution")
-        fig1, ax1 = plt.subplots()
+        st.subheader("Cluster Distribution")
+        fig1, ax1 = plt.subplots(figsize=(5, 4))
         sns.countplot(x='cluster', data=df, palette='Set2', ax=ax1)
         st.pyplot(fig1)
 
-        # PCA for 2D scatter plot
         pca = PCA(n_components=2)
         pca_result = pca.fit_transform(X_scaled)
         df['pca1'] = pca_result[:, 0]
         df['pca2'] = pca_result[:, 1]
 
-        st.subheader("🌀 PCA-based Cluster Visualization")
-        fig2, ax2 = plt.subplots()
+        st.subheader("PCA-based Cluster Visualization")
+        fig2, ax2 = plt.subplots(figsize=(5, 4))
         sns.scatterplot(x='pca1', y='pca2', hue='cluster', data=df, palette='tab10', ax=ax2)
         st.pyplot(fig2)
 
-        # Cluster-wise means
-        st.subheader("📈 Cluster-wise Feature Means")
+        st.subheader("Cluster-wise Feature Means")
         cluster_means = df.groupby('cluster').mean()
         st.dataframe(cluster_means.style.background_gradient(cmap='Blues'))
 
-        # Feature-wise boxplots by cluster
-        st.subheader("📦 Boxplot for Selected Feature by Cluster")
+        st.subheader("Feature Boxplot by Cluster")
         feat_col = st.selectbox("Select Feature", df.select_dtypes(include='number').columns.drop(['cluster', 'pca1', 'pca2']))
-        fig3, ax3 = plt.subplots()
+        fig3, ax3 = plt.subplots(figsize=(5, 4))
         sns.boxplot(x='cluster', y=feat_col, data=df, palette='Set3', ax=ax3)
         st.pyplot(fig3)
 
-        # Silhouette Score
-        if len(set(labels)) > 1:
-            score = silhouette_score(X_scaled, labels)
-            st.info(f"Silhouette Score: {score:.3f}")
+        st.subheader("Cluster Descriptions")
+        for cid, (name, desc) in personality_map.items():
+            st.markdown(f"**Cluster {cid} - {name}:** {desc}")
 
-        # Download clustered dataset
         csv = df.to_csv(index=False).encode('utf-8')
         st.download_button("Download Clustered Dataset", csv, "clustered_personality_data.csv", "text/csv")
 
     except FileNotFoundError:
-        st.error("The required dataset 'personality_app/personality_data.csv' was not found. Please make sure it exists.")
+        st.error("The required dataset 'personality_app/personality.csv' was not found. Please make sure it exists.")
