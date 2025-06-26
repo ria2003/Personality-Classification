@@ -54,7 +54,7 @@ if selection == "🧠 Personality Predictor":
 
     if st.button("Predict Personality Cluster"):
         input_scaled = scaler.transform([user_input])
-        cluster = model.predict(input_scaled)[0]
+        cluster = model[input_scaled][0] if isinstance(model, np.ndarray) else model.predict(input_scaled)[0]
         st.subheader("Predicted Personality Cluster:")
         st.success(f"You belong to {personality_map.get(cluster, f'Cluster {cluster}')}.")
 
