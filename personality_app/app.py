@@ -102,7 +102,7 @@ elif selection == "📊 Dashboard":
         df['cluster'] = labels
 
         st.subheader("Cluster Distribution")
-        fig1, ax1 = plt.subplots(figsize=(5, 4))
+        fig1, ax1 = plt.subplots(figsize=(10, 8))
         sns.countplot(x='cluster', data=df, palette='Set2', ax=ax1)
         st.pyplot(fig1)
 
@@ -112,7 +112,7 @@ elif selection == "📊 Dashboard":
         df['pca2'] = pca_result[:, 1]
 
         st.subheader("PCA-based Cluster Visualization")
-        fig2, ax2 = plt.subplots(figsize=(5, 4))
+        fig2, ax2 = plt.subplots(figsize=(10, 8))
         sns.scatterplot(x='pca1', y='pca2', hue='cluster', data=df, palette='tab10', ax=ax2)
         st.pyplot(fig2)
 
@@ -122,8 +122,8 @@ elif selection == "📊 Dashboard":
 
         st.subheader("Feature Boxplot by Cluster")
         feat_col = st.selectbox("Select Feature", df.select_dtypes(include='number').columns.drop(['cluster', 'pca1', 'pca2']))
-        fig3, ax3 = plt.subplots(figsize=(5, 4))
-        sns.boxplot(x='cluster', y=feat_col, data=df, palette='Set3', ax=ax3)
+        fig3, ax3 = plt.subplots(figsize=(10, 8))
+        sns.boxplot(x='cluster', y=feat_col, hue="cluster", data=df, palette='Set3', ax=ax3)
         st.pyplot(fig3)
 
         st.subheader("Cluster Descriptions")
