@@ -8,32 +8,25 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.decomposition import PCA
 import os
 
-# Set style for seaborn
 sns.set(style="whitegrid")
 
-# Set page config
 st.set_page_config(page_title="Personality Predictor", layout="wide")
 
-# Load model and scaler
 model = pickle.load(open("personality_app/kmeans_model.pkl", "rb"))
 scaler = pickle.load(open("personality_app/ensemble_scaler.pkl", "rb"))
 
-# Define personality map and descriptions
 personality_map = {
     0: ("Introvert", "You tend to enjoy solitude, deep thinking, and quiet environments. You're thoughtful and often recharge by spending time alone."),
     1: ("Ambivert", "You display a balance of introverted and extroverted tendencies. You enjoy both social interactions and time alone."),
     2: ("Extrovert", "You thrive in social environments, love engaging with people, and gain energy from being around others.")
 }
 
-# Sidebar for navigation
 st.sidebar.title("Navigation")
 selection = st.sidebar.radio("Go to", ["🧠 Personality Predictor", "📊 Dashboard"])
 
-# Create a directory to store new inputs if it doesn't exist
 if not os.path.exists("user_inputs"):
     os.makedirs("user_inputs")
 
-# -------- TAB 1: Personality Predictor --------
 if selection == "🧠 Personality Predictor":
     st.title("🧠 Live Personality Type Predictor")
     st.markdown("Select your behavioral traits below:")
@@ -63,7 +56,6 @@ if selection == "🧠 Personality Predictor":
         st.success(f"{label}")
         st.info(insight)
 
-        # Radar chart for visual profile
         st.subheader("Your Personality Radar Chart")
         categories = [f.replace('_', ' ').title() for f in feature_labels[:8]]
         values = user_input[:8]
@@ -71,7 +63,7 @@ if selection == "🧠 Personality Predictor":
         angles = np.linspace(0, 2 * np.pi, len(categories), endpoint=False).tolist()
         angles += angles[:1]
 
-        fig, ax = plt.subplots(figsize=(5, 5), subplot_kw=dict(polar=True))
+        fig, ax = plt.subplots(figsize=(3, 2), subplot_kw=dict(polar=True))
         ax.plot(angles, values, color='purple', linewidth=2)
         ax.fill(angles, values, color='purple', alpha=0.25)
         ax.set_xticks(angles[:-1])
@@ -79,13 +71,11 @@ if selection == "🧠 Personality Predictor":
         ax.set_yticklabels([])
         st.pyplot(fig)
 
-        # Save input
         input_data = pd.DataFrame([user_input], columns=feature_labels)
         input_data['cluster'] = cluster
         input_data.to_csv("personality_app/personality.csv", mode='a', header=not os.path.exists("personality_app/personality.csv"), index=False)
         st.info("Your input has been saved for future model improvement.")
 
-# -------- TAB 2: Dashboard --------
 elif selection == "📊 Dashboard":
     st.title("📊 Dataset Dashboard & Insights")
 
@@ -102,7 +92,7 @@ elif selection == "📊 Dashboard":
         df['cluster'] = labels
 
         st.subheader("Cluster Distribution")
-        fig1, ax1 = plt.subplots(figsize=(10, 8))
+        fig1, ax1 = plt.subplots(figsize=(3, 3))
         sns.countplot(x='cluster', data=df, palette='Set2', ax=ax1)
         st.pyplot(fig1)
 
@@ -112,7 +102,7 @@ elif selection == "📊 Dashboard":
         df['pca2'] = pca_result[:, 1]
 
         st.subheader("PCA-based Cluster Visualization")
-        fig2, ax2 = plt.subplots(figsize=(10, 8))
+        fig2, ax2 = plt.subplots(figsize=(3, 3))
         sns.scatterplot(x='pca1', y='pca2', hue='cluster', data=df, palette='tab10', ax=ax2)
         st.pyplot(fig2)
 
@@ -122,7 +112,7 @@ elif selection == "📊 Dashboard":
 
         st.subheader("Feature Boxplot by Cluster")
         feat_col = st.selectbox("Select Feature", df.select_dtypes(include='number').columns.drop(['cluster', 'pca1', 'pca2']))
-        fig3, ax3 = plt.subplots(figsize=(10, 8))
+        fig3, ax3 = plt.subplots(figsize=(3, 3))
         sns.boxplot(x='cluster', y=feat_col, hue="cluster", data=df, palette='Set3', ax=ax3)
         st.pyplot(fig3)
 
