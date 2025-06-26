@@ -17,7 +17,7 @@ sns.set(style="whitegrid")
 st.set_page_config(page_title="Personality Predictor", layout="wide")
 
 # Load model and scaler
-model = pickle.load(open("personality_app/ensemble_model.pkl", "rb"))
+model = pickle.load(open("personality_app/kmeans_model.pkl", "rb"))
 scaler = pickle.load(open("personality_app/ensemble_scaler.pkl", "rb"))
 
 # Define personality map
@@ -74,7 +74,7 @@ elif selection == "📊 Dashboard":
 
         # Correlation heatmap
         st.subheader("📌 Feature Correlation Heatmap")
-        fig2, ax2 = plt.subplots(figsize=(12, 10))
+        fig2, ax2 = plt.subplots(figsize=(10, 8))
         sns.heatmap(df.drop('personality_type', axis=1).corr(), cmap='coolwarm', ax=ax2)
         st.pyplot(fig2)
 
