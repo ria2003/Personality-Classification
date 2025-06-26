@@ -40,7 +40,7 @@ personality_insights = {
 }
 
 # Data persistence file
-DATA_FILE = "personality.csv"
+DATA_FILE = "personality_app/personality.csv"
 
 # Sidebar Navigation
 st.sidebar.title("🔍 Navigation")
@@ -73,7 +73,8 @@ if selection == "🧠 Personality Predictor":
     col1, col2, col3 = st.columns([1, 2, 1])
     with col2:
         if st.button("Predict Personality"):
-            scaled_input = scaler.transform([user_input])
+            input_df = pd.DataFrame([user_input], columns=feature_labels)
+            scaled_input = scaler.transform(input_df)
             prediction = kmeans_model.predict(scaled_input)[0]
             label = personality_map[prediction]
             insight = personality_insights[prediction]
