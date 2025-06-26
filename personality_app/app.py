@@ -13,7 +13,7 @@ st.set_page_config(page_title="Personality Predictor", layout="wide")
 sns.set(style="whitegrid")
 
 # Load models
-model = pickle.load(open("personality_app/kmeans_model.pkl", "rb"))
+kmeans_model = pickle.load(open("personality_app/kmeans_model.pkl", "rb"))
 scaler = pickle.load(open("personality_app/ensemble_scaler.pkl", "rb"))
 
 # Define personality labels and insights
@@ -40,7 +40,7 @@ personality_insights = {
 }
 
 # Data persistence file
-DATA_FILE = "user_data.csv"
+DATA_FILE = "personality.csv"
 
 # Sidebar Navigation
 st.sidebar.title("🔍 Navigation")
@@ -74,7 +74,7 @@ if selection == "🧠 Personality Predictor":
     with col2:
         if st.button("Predict Personality"):
             scaled_input = scaler.transform([user_input])
-            prediction = model.predict(scaled_input)[0]
+            prediction = kmeans_model.predict(scaled_input)[0]
             label = personality_map[prediction]
             insight = personality_insights[prediction]
 
