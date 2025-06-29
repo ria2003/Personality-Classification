@@ -48,26 +48,26 @@ if selection == "🧠 Personality Predictor":
             val = st.slider(f"{feat.replace('_', ' ').title()}", 0.0, 10.0, 5.0)
             user_input.append(val)
 
-    if st.button("Predict Personality Cluster"):
+    if st.button("Predict Personality"):
         input_scaled = scaler.transform([user_input])
         cluster = model.predict(input_scaled)[0]
         label, insight = personality_map.get(cluster, (f"Cluster {cluster}", "No description available."))
-        st.subheader("Predicted Personality Cluster:")
+        st.subheader("Predicted Personality :")
         st.success(f"{label}")
         st.info(insight)
 
         st.subheader("Your Personality Radar Chart")
-        categories = [f.replace('_', ' ').title() for f in feature_labels[:8]]
-        values = user_input[:8]
+        categories = [f.replace('_', ' ').title() for f in feature_labels[:29]]
+        values = user_input[:29]
         values += values[:1]
         angles = np.linspace(0, 2 * np.pi, len(categories), endpoint=False).tolist()
         angles += angles[:1]
 
-        fig, ax = plt.subplots(figsize=(12, 10), subplot_kw=dict(polar=True))
+        fig, ax = plt.subplots(figsize=(12, 8), subplot_kw=dict(polar=True))
         ax.plot(angles, values, color='purple', linewidth=2)
         ax.fill(angles, values, color='purple', alpha=0.25)
         ax.set_xticks(angles[:-1])
-        ax.set_xticklabels(categories, fontsize=6)
+        ax.set_xticklabels(categories, fontsize=10)
         ax.set_yticklabels([])
         st.pyplot(fig)
 
@@ -92,7 +92,7 @@ elif selection == "📊 Dashboard":
         df['cluster'] = labels
 
         st.subheader("Cluster Distribution")
-        fig1, ax1 = plt.subplots(figsize=(12, 10))
+        fig1, ax1 = plt.subplots(figsize=(12, 8))
         sns.countplot(x='cluster', data=df, palette='Set2', ax=ax1)
         st.pyplot(fig1)
 
@@ -102,7 +102,7 @@ elif selection == "📊 Dashboard":
         df['pca2'] = pca_result[:, 1]
 
         st.subheader("PCA-based Cluster Visualization")
-        fig2, ax2 = plt.subplots(figsize=(12, 10))
+        fig2, ax2 = plt.subplots(figsize=(12, 8))
         sns.scatterplot(x='pca1', y='pca2', hue='cluster', data=df, palette='tab10', ax=ax2)
         st.pyplot(fig2)
 
@@ -112,7 +112,7 @@ elif selection == "📊 Dashboard":
 
         st.subheader("Feature Boxplot by Cluster")
         feat_col = st.selectbox("Select Feature", df.select_dtypes(include='number').columns.drop(['cluster', 'pca1', 'pca2']))
-        fig3, ax3 = plt.subplots(figsize=(5, 4))
+        fig3, ax3 = plt.subplots(figsize=(12, 8))
         sns.boxplot(x='cluster', y=feat_col, hue="cluster", data=df, palette='Set3', ax=ax3)
         st.pyplot(fig3)
 
