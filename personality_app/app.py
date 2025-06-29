@@ -63,7 +63,7 @@ if selection == "🧠 Personality Predictor":
         angles = np.linspace(0, 2 * np.pi, len(categories), endpoint=False).tolist()
         angles += angles[:1]
 
-        fig, ax = plt.subplots(figsize=(12, 6), subplot_kw=dict(polar=True))
+        fig, ax = plt.subplots(figsize=(12, 4), subplot_kw=dict(polar=True))
         ax.plot(angles, values, color='purple', linewidth=2)
         ax.fill(angles, values, color='purple', alpha=0.25)
         ax.set_xticks(angles[:-1])
@@ -92,7 +92,7 @@ elif selection == "📊 Dashboard":
         df['cluster'] = labels
 
         st.subheader("Cluster Distribution")
-        fig1, ax1 = plt.subplots(figsize=(12, 6))
+        fig1, ax1 = plt.subplots(figsize=(12, 4))
         sns.countplot(x='cluster', data=df, palette='Set2', ax=ax1)
         st.pyplot(fig1)
 
