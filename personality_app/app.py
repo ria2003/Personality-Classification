@@ -63,7 +63,7 @@ if selection == "🧠 Personality Predictor":
         angles = np.linspace(0, 2 * np.pi, len(categories), endpoint=False).tolist()
         angles += angles[:1]
 
-        fig, ax = plt.subplots(figsize=(12, 6), subplot_kw=dict(polar=True))
+        fig, ax = plt.subplots(figsize=(12, 5), subplot_kw=dict(polar=True))
         ax.plot(angles, values, color='purple', linewidth=2)
         ax.fill(angles, values, color='purple', alpha=0.25)
         ax.set_xticks(angles[:-1])
@@ -73,8 +73,17 @@ if selection == "🧠 Personality Predictor":
 
         input_data = pd.DataFrame([user_input], columns=feature_labels)
         input_data['cluster'] = cluster
-        input_data.to_csv("personality_app/personality.csv", mode='a', header=not os.path.exists("personality_app/personality.csv"), index=False)
-        st.info("Your input has been saved for future model improvement.")
+
+        try:
+            if os.path.exists("personality_app/personality.csv"):
+                existing_data = pd.read_csv("personality_app/personality.csv")
+                updated_data = pd.concat([existing_data, input_data], ignore_index=True)
+            else:
+                updated_data = input_data
+            updated_data.to_csv("personality_app/personality.csv", index=False)
+            st.info("Your input has been saved for future model improvement.")
+        except Exception as e:
+            st.error(f"Failed to save input: {e}")
 
 elif selection == "📊 Dashboard":
     st.title("📊 Dataset Dashboard & Insights")
@@ -90,10 +99,11 @@ elif selection == "📊 Dashboard":
         X_scaled = scaler.transform(df)
         labels = model.predict(X_scaled)
         df['cluster'] = labels
+        df['Personality'] = df['cluster'].map({k: v[0] for k, v in personality_map.items()})
 
         st.subheader("Cluster Distribution")
         fig1, ax1 = plt.subplots(figsize=(12, 6))
-        sns.countplot(x='cluster', data=df, palette='Set2', ax=ax1)
+        sns.countplot(x='Personality', data=df, palette='Set2', ax=ax1)
         st.pyplot(fig1)
 
         pca = PCA(n_components=2)
@@ -103,22 +113,30 @@ elif selection == "📊 Dashboard":
 
         st.subheader("PCA-based Cluster Visualization")
         fig2, ax2 = plt.subplots(figsize=(12, 6))
-        sns.scatterplot(x='pca1', y='pca2', hue='cluster', data=df, palette='tab10', ax=ax2)
+        sns.scatterplot(x='pca1', y='pca2', hue='Personality', data=df, palette='tab10', ax=ax2)
         st.pyplot(fig2)
 
         st.subheader("Cluster-wise Feature Means")
-        cluster_means = df.groupby('cluster').mean()
+        cluster_means = df.groupby('Personality').mean()
         st.dataframe(cluster_means.style.background_gradient(cmap='Blues'))
 
-        st.subheader("Feature Boxplot by Cluster")
+        st.subheader("Feature Violin Plot by Personality Type")
         feat_col = st.selectbox("Select Feature", df.select_dtypes(include='number').columns.drop(['cluster', 'pca1', 'pca2']))
         fig3, ax3 = plt.subplots(figsize=(12, 6))
-        sns.boxplot(x='cluster', y=feat_col, hue="cluster", data=df, palette='Set3', ax=ax3)
+        sns.violinplot(x='Personality', y=feat_col, data=df, palette='Set3', ax=ax3)
         st.pyplot(fig3)
+
+        st.subheader("Top Distinguishing Features per Personality")
+        top_features = cluster_means.T
+        top_n = 5
+        for personality in top_features.columns:
+            top_feats = top_features[personality].sort_values(ascending=False).head(top_n)
+            st.markdown(f"**{personality}:**")
+            st.write(top_feats)
 
         st.subheader("Cluster Descriptions")
         for cid, (name, desc) in personality_map.items():
-            st.markdown(f"**Cluster {cid} - {name}:** {desc}")
+            st.markdown(f"**{name}:** {desc}")
 
         csv = df.to_csv(index=False).encode('utf-8')
         st.download_button("Download Clustered Dataset", csv, "clustered_personality_data.csv", "text/csv")
