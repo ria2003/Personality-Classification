@@ -71,10 +71,22 @@ if selection == "🧠 Personality Predictor":
         ax.set_yticklabels([])
         st.pyplot(fig)
 
+
         input_data = pd.DataFrame([user_input], columns=feature_labels)
         input_data['cluster'] = cluster
+        '''
         input_data.to_csv("personality_app/personality.csv", mode='a', header=not os.path.exists("personality_app/personality.csv"), index=False)
         st.info("Your input has been saved for future model improvement.")
+        '''
+        
+
+        try:
+            with open("personality_app/personality.csv", mode='a', newline='') as f:
+                input_data.to_csv(f, header=f.tell() == 0, index=False)
+            st.info("Your input has been saved for future model improvement.")
+        except Exception as e:
+            st.error(f"Failed to save input data: {e}")
+
 
 elif selection == "📊 Dashboard":
     st.title("📊 Dataset Dashboard & Insights")
@@ -134,6 +146,11 @@ elif selection == "📊 Dashboard":
             top_feats = row.sort_values(ascending=False).head(top_n)
             temp_df = pd.DataFrame({"Feature": top_feats.index, "Score": top_feats.values, "Personality": persona})
             top_features_df = pd.concat([top_features_df, temp_df])
+
+        fig4, ax4 = plt.subplots(figsize=(12, 6))
+        sns.barplot(x='Feature', y='Score', hue='Personality', data=top_features_df, ax=ax4)
+        ax4.set_title("Top Features by Personality Type")
+        st.pyplot(fig4)
 
         st.subheader("Cluster Descriptions")
         for cid, (name, desc) in personality_map.items():
