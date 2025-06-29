@@ -63,7 +63,7 @@ if selection == "🧠 Personality Predictor":
         angles = np.linspace(0, 2 * np.pi, len(categories), endpoint=False).tolist()
         angles += angles[:1]
 
-        fig, ax = plt.subplots(figsize=(5, 5), subplot_kw=dict(polar=True))
+        fig, ax = plt.subplots(figsize=(3, 2), subplot_kw=dict(polar=True))
         ax.plot(angles, values, color='purple', linewidth=2)
         ax.fill(angles, values, color='purple', alpha=0.25)
         ax.set_xticks(angles[:-1])
