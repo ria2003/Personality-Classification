@@ -67,7 +67,7 @@ if selection == "🧠 Personality Predictor":
         ax.plot(angles, values, color='purple', linewidth=2)
         ax.fill(angles, values, color='purple', alpha=0.25)
         ax.set_xticks(angles[:-1])
-        ax.set_xticklabels(categories, fontsize=8)
+        ax.set_xticklabels(categories, fontsize=6)
         ax.set_yticklabels([])
         st.pyplot(fig)
 
@@ -92,7 +92,7 @@ elif selection == "📊 Dashboard":
         df['cluster'] = labels
 
         st.subheader("Cluster Distribution")
-        fig1, ax1 = plt.subplots(figsize=(12, 5))
+        fig1, ax1 = plt.subplots(figsize=(12, 6))
         sns.countplot(x='cluster', data=df, palette='Set2', ax=ax1)
         st.pyplot(fig1)
 
@@ -102,7 +102,7 @@ elif selection == "📊 Dashboard":
         df['pca2'] = pca_result[:, 1]
 
         st.subheader("PCA-based Cluster Visualization")
-        fig2, ax2 = plt.subplots(figsize=(12, 5))
+        fig2, ax2 = plt.subplots(figsize=(12, 6))
         sns.scatterplot(x='pca1', y='pca2', hue='cluster', data=df, palette='tab10', ax=ax2)
         st.pyplot(fig2)
 
