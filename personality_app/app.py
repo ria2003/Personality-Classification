@@ -74,18 +74,9 @@ if selection == "🧠 Personality Predictor":
 
         input_data = pd.DataFrame([user_input], columns=feature_labels)
         input_data['cluster'] = cluster
-        '''
         input_data.to_csv("personality_app/personality.csv", mode='a', header=not os.path.exists("personality_app/personality.csv"), index=False)
         st.info("Your input has been saved for future model improvement.")
-        '''
         
-
-        try:
-            with open("personality_app/personality.csv", mode='a', newline='') as f:
-                input_data.to_csv(f, header=f.tell() == 0, index=False)
-            st.info("Your input has been saved for future model improvement.")
-        except Exception as e:
-            st.error(f"Failed to save input data: {e}")
 
 
 elif selection == "📊 Dashboard":
