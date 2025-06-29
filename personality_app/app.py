@@ -2,11 +2,12 @@ import streamlit as st
 import numpy as np
 import pandas as pd
 import pickle
-import matplotlib.pyplot as plt
-import seaborn as sns
+import os
 from sklearn.preprocessing import StandardScaler
 from sklearn.decomposition import PCA
-import os
+import streamlit.components.v1 as components
+import matplotlib.pyplot as plt
+import seaborn as sns
 
 sns.set(style="whitegrid")
 
@@ -57,19 +58,29 @@ if selection == "🧠 Personality Predictor":
         st.info(insight)
 
         st.subheader("Your Personality Radar Chart")
-        categories = [f.replace('_', ' ').title() for f in feature_labels[:8]]
-        values = user_input[:8]
-        values += values[:1]
-        angles = np.linspace(0, 2 * np.pi, len(categories), endpoint=False).tolist()
-        angles += angles[:1]
-
-        fig, ax = plt.subplots(figsize=(3, 2), subplot_kw=dict(polar=True))
-        ax.plot(angles, values, color='purple', linewidth=2)
-        ax.fill(angles, values, color='purple', alpha=0.25)
-        ax.set_xticks(angles[:-1])
-        ax.set_xticklabels(categories, fontsize=10)
-        ax.set_yticklabels([])
-        st.pyplot(fig)
+        radar_labels = [f.replace('_', ' ').title() for f in feature_labels[:8]]
+        radar_values = user_input[:8]
+        radar_chart = f"""
+        <canvas id="radarChart" width="350" height="350"></canvas>
+        <script>
+        const ctx = document.getElementById('radarChart').getContext('2d');
+        new Chart(ctx, {{
+            type: 'radar',
+            data: {{
+                labels: {radar_labels},
+                datasets: [{{
+                    label: 'Your Profile',
+                    data: {radar_values},
+                    backgroundColor: 'rgba(153, 102, 255, 0.2)',
+                    borderColor: 'rgba(153, 102, 255, 1)',
+                    borderWidth: 2
+                }}]
+            }},
+            options: {{responsive: true, maintainAspectRatio: false}}
+        }});
+        </script>
+        """
+        components.html(radar_chart, height=400)
 
         input_data = pd.DataFrame([user_input], columns=feature_labels)
         input_data['cluster'] = cluster
@@ -92,9 +103,26 @@ elif selection == "📊 Dashboard":
         df['cluster'] = labels
 
         st.subheader("Cluster Distribution")
-        fig1, ax1 = plt.subplots(figsize=(5, 4))
-        sns.countplot(x='cluster', data=df, palette='Set2', ax=ax1)
-        st.pyplot(fig1)
+        cluster_counts = df['cluster'].value_counts().sort_index().tolist()
+        cluster_labels = [f"Cluster {i}" for i in range(len(cluster_counts))]
+        bar_chart = f"""
+        <canvas id='barChart'></canvas>
+        <script>
+        new Chart(document.getElementById('barChart').getContext('2d'), {{
+            type: 'bar',
+            data: {{
+                labels: {cluster_labels},
+                datasets: [{{
+                    label: 'Count',
+                    data: {cluster_counts},
+                    backgroundColor: ['#66c2a5','#fc8d62','#8da0cb']
+                }}]
+            }},
+            options: {{responsive: true, maintainAspectRatio: false}}
+        }});
+        </script>
+        """
+        components.html(bar_chart, height=350)
 
         pca = PCA(n_components=2)
         pca_result = pca.fit_transform(X_scaled)
@@ -102,19 +130,50 @@ elif selection == "📊 Dashboard":
         df['pca2'] = pca_result[:, 1]
 
         st.subheader("PCA-based Cluster Visualization")
-        fig2, ax2 = plt.subplots(figsize=(5, 4))
-        sns.scatterplot(x='pca1', y='pca2', hue='cluster', data=df, palette='tab10', ax=ax2)
-        st.pyplot(fig2)
+        scatter_data = df[['pca1', 'pca2', 'cluster']].values.tolist()
+        scatter_chart = f"""
+        <canvas id='scatterChart'></canvas>
+        <script>
+        const colors = ['#1f77b4', '#ff7f0e', '#2ca02c'];
+        const grouped = {{}};
+        {scatter_data}.forEach(function(point) {{
+            const [x, y, c] = point;
+            if (!grouped[c]) grouped[c] = [];
+            grouped[c].push({{x: x, y: y}});
+        }});
+        const datasets = Object.entries(grouped).map(function([key, data], idx) {{
+            return {{
+                label: 'Cluster ' + key,
+                data: data,
+                backgroundColor: colors[idx % colors.length]
+            }};
+        }});
+        new Chart(document.getElementById('scatterChart').getContext('2d'), {{
+            type: 'scatter',
+            data: {{ datasets: datasets }},
+            options: {{
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {{
+                    x: {{ title: {{ display: true, text: 'PCA 1' }} }},
+                    y: {{ title: {{ display: true, text: 'PCA 2' }} }}
+                }}
+            }}
+        }});
+        </script>
+        """
 
-        st.subheader("Cluster-wise Feature Means")
+        components.html(scatter_chart, height=400)
+
+        st.subheader("Cluster-wise Feature Means (Line Plot)")
         cluster_means = df.groupby('cluster').mean()
         st.dataframe(cluster_means.style.background_gradient(cmap='Blues'))
 
-        st.subheader("Feature Boxplot by Cluster")
+        st.subheader("Violin Plot: Feature Distribution by Cluster")
         feat_col = st.selectbox("Select Feature", df.select_dtypes(include='number').columns.drop(['cluster', 'pca1', 'pca2']))
-        fig3, ax3 = plt.subplots(figsize=(5, 4))
-        sns.boxplot(x='cluster', y=feat_col, hue="cluster", data=df, palette='Set3', ax=ax3)
-        st.pyplot(fig3)
+        fig, ax = plt.subplots(figsize=(5, 4))
+        sns.violinplot(x='cluster', y=feat_col, data=df, palette='Set3', ax=ax)
+        st.pyplot(fig)
 
         st.subheader("Cluster Descriptions")
         for cid, (name, desc) in personality_map.items():
