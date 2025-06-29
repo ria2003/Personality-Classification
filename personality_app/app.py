@@ -129,10 +129,11 @@ elif selection == "📊 Dashboard":
 
         st.subheader("Top Features for Each Personality")
         top_n = 5
+        top_features_df = pd.DataFrame()
         for persona, row in cluster_means.iterrows():
             top_feats = row.sort_values(ascending=False).head(top_n)
-            st.markdown(f"**{persona}:**")
-            st.write(top_feats)
+            temp_df = pd.DataFrame({"Feature": top_feats.index, "Score": top_feats.values, "Personality": persona})
+            top_features_df = pd.concat([top_features_df, temp_df])
 
         st.subheader("Cluster Descriptions")
         for cid, (name, desc) in personality_map.items():
