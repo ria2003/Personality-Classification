@@ -63,11 +63,11 @@ if selection == "🧠 Personality Predictor":
         angles = np.linspace(0, 2 * np.pi, len(categories), endpoint=False).tolist()
         angles += angles[:1]
 
-        fig, ax = plt.subplots(figsize=(12, 4), subplot_kw=dict(polar=True))
+        fig, ax = plt.subplots(figsize=(12, 6), subplot_kw=dict(polar=True))
         ax.plot(angles, values, color='purple', linewidth=2)
         ax.fill(angles, values, color='purple', alpha=0.25)
         ax.set_xticks(angles[:-1])
-        ax.set_xticklabels(categories, fontsize=6)
+        ax.set_xticklabels(categories, fontsize=4)
         ax.set_yticklabels([])
         st.pyplot(fig)
 
@@ -112,7 +112,7 @@ elif selection == "📊 Dashboard":
 
         st.subheader("Feature Boxplot by Cluster")
         feat_col = st.selectbox("Select Feature", df.select_dtypes(include='number').columns.drop(['cluster', 'pca1', 'pca2']))
-        fig3, ax3 = plt.subplots(figsize=(12, 5))
+        fig3, ax3 = plt.subplots(figsize=(12, 6))
         sns.boxplot(x='cluster', y=feat_col, hue="cluster", data=df, palette='Set3', ax=ax3)
         st.pyplot(fig3)
 
