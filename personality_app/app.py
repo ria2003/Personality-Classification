@@ -73,17 +73,8 @@ if selection == "🧠 Personality Predictor":
 
         input_data = pd.DataFrame([user_input], columns=feature_labels)
         input_data['cluster'] = cluster
-
-        try:
-            if os.path.exists("personality_app/personality.csv"):
-                existing_data = pd.read_csv("personality_app/personality.csv")
-                updated_data = pd.concat([existing_data, input_data], ignore_index=True)
-            else:
-                updated_data = input_data
-            updated_data.to_csv("personality_app/personality.csv", index=False)
-            st.info("Your input has been saved for future model improvement.")
-        except Exception as e:
-            st.error(f"Failed to save input: {e}")
+        input_data.to_csv("personality_app/personality.csv", mode='a', header=not os.path.exists("personality_app/personality.csv"), index=False)
+        st.info("Your input has been saved for future model improvement.")
 
 elif selection == "📊 Dashboard":
     st.title("📊 Dataset Dashboard & Insights")
@@ -96,7 +87,17 @@ elif selection == "📊 Dashboard":
         if 'personality_type' in df.columns:
             df = df.drop('personality_type', axis=1)
 
-        X_scaled = scaler.transform(df)
+        feature_labels = [
+            "social_energy", "alone_time_preference", "talkativeness", "deep_reflection",
+            "group_comfort", "party_liking", "listening_skill", "empathy", "creativity",
+            "organization", "leadership", "risk_taking", "public_speaking_comfort",
+            "curiosity", "routine_preference", "excitement_seeking", "friendliness",
+            "emotional_stability", "planning", "spontaneity", "adventurousness",
+            "reading_habit", "sports_interest", "online_social_usage", "travel_desire",
+            "gadget_usage", "work_style_collaborative", "decision_speed", "stress_handling"
+        ]
+
+        X_scaled = scaler.transform(df[feature_labels])
         labels = model.predict(X_scaled)
         df['cluster'] = labels
         df['Personality'] = df['cluster'].map({k: v[0] for k, v in personality_map.items()})
@@ -117,21 +118,20 @@ elif selection == "📊 Dashboard":
         st.pyplot(fig2)
 
         st.subheader("Cluster-wise Feature Means")
-        cluster_means = df.groupby('Personality').mean()
+        cluster_means = df.groupby('Personality')[feature_labels].mean()
         st.dataframe(cluster_means.style.background_gradient(cmap='Blues'))
 
-        st.subheader("Feature Violin Plot by Personality Type")
+        st.subheader("Feature Violin Plot by Personality")
         feat_col = st.selectbox("Select Feature", df.select_dtypes(include='number').columns.drop(['cluster', 'pca1', 'pca2']))
         fig3, ax3 = plt.subplots(figsize=(12, 6))
         sns.violinplot(x='Personality', y=feat_col, data=df, palette='Set3', ax=ax3)
         st.pyplot(fig3)
 
-        st.subheader("Top Distinguishing Features per Personality")
-        top_features = cluster_means.T
+        st.subheader("Top Features for Each Personality")
         top_n = 5
-        for personality in top_features.columns:
-            top_feats = top_features[personality].sort_values(ascending=False).head(top_n)
-            st.markdown(f"**{personality}:**")
+        for persona, row in cluster_means.iterrows():
+            top_feats = row.sort_values(ascending=False).head(top_n)
+            st.markdown(f"**{persona}:**")
             st.write(top_feats)
 
         st.subheader("Cluster Descriptions")
